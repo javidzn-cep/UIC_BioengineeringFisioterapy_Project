@@ -32,7 +32,7 @@ void loop() {
   BLEDevice central = BLE.central();
 
   if (central) {
-    Serial.print("Conexión establecida con: ");
+    Serial.print("Connected to central: ");
     Serial.println(central.address());
 
     while (central.connected()) {
@@ -44,8 +44,8 @@ void loop() {
 
       delay(500);
     }
-  }
 
-  Serial.print("Desconexión de: ");
-  Serial.println(central.address());
+    Serial.print("Disconnected from central: ");
+    Serial.println(central.address());
+  }
 }

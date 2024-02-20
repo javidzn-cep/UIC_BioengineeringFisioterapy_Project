@@ -4,8 +4,8 @@
     "liveServer.settings.CustomBrowser": "chrome",
     "liveServer.settings.https": {
         "enable": true,
-        "cert": "/Users/javie/Desktop/Proyecto UIC/https/localhost.pem",
-        "key": "/Users/javie/Desktop/Proyecto UIC/https/localhost.key",
+        "cert": "/Users/javie/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.pem",
+        "key": "/Users/javie/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.key",
         "passphrase": "UICBCN"
     }
 }

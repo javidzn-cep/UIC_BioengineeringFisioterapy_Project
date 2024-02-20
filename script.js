@@ -1,7 +1,7 @@
 const 
     deviceName = 'UIC BCN',
-    bleService = '0000180a-0000-1000-8000-00805f9b34fb',
-    bleCharacteristic = '00002a57-0000-1000-8000-00805f9b34fb';
+    bleService = '00000000-0000-0000-000a-0000000e00ce',
+    bleCharacteristic = '00000000-0000-0000-0000-0a0000000e0e';
 let 
     bluetoothDeviceDetected, gattCharacteristic;
 
@@ -62,6 +62,7 @@ function connectGATT() {
         .then(characteristic => {
             gattCharacteristic = characteristic
             gattCharacteristic.addEventListener('characteristicvaluechanged', e => handleChangedValue(e))
+            start()
             document.querySelector('.start').disabled = false
             document.querySelector('.stop').disabled = true
         })
@@ -70,7 +71,7 @@ function connectGATT() {
 function handleChangedValue(e) {
     let value = e.target.value.getUint8(0)
     var now = new Date()
-    console.log('> ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + ' UV Index is ' + value)
+    console.log('> ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + ' Dato Recibido: ' + value)
 }
 
 function start() {
