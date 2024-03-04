@@ -6,13 +6,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIC BCN | BioEngineering - Fisiotherapy Pro</title>
     <link rel="icon" href="./favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="./style/style.css">
     <script src="./js/gattConnection.js"></script>
     <script src="./js/script.js"></script>
+    <script type="importmap">{"imports": {"three": "https://unpkg.com/three@0.162.0/build/three.module.js","three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"}}</script>
+    <script type="module" src="./js/imuVisualizer.js"></script>
+    <script type="module" src="./js/sensorFusion.js"></script>
 </head>
 <body>
-    <button class="read">Connect with the Bluetooth Device</button>
-    <button class="start">Start</button>
-    <button class="stop">Stop</button>
+    <div class="IMU-container">
+        <div class="blt-data">
+            <div class="blt-control-btns">
+                <button class="blt-request blt-btn"><i class="fa-brands fa-bluetooth-b fa-2xl" style="color: blue;"></i></button>
+                <button class="blt-start-notifications blt-btn"><i class="fa-solid fa-play fa-2xl"style="color: gray;"></i></button>
+                <button class="blt-stop-modifications blt-btn"><i class="fa-solid fa-stop fa-2xl" style="color: gray;"></i></button>
+            </div>
+            <div class="filter-options">
+                <input class="low-pass-filter" id="low-pass-filter" type="checkbox" checked>
+                <label for="low-pass-filter">Enable Low Pass Filter</label><br>
+            </div>
+            <div class="characteristic-container final-imu-data">
+                <div class="characteristic-title">Final IMU Data</div>
+                <div class="characteristic-data ">
+                    <div class="data-title">Pitch:</div>
+                    <div class="pitch data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Roll:</div>
+                    <div class="roll data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Yaw:</div>
+                    <div class="yaw data">0</div>
+                </div>
+            </div>
+            <div class="characteristic-container accelerometer-data">
+                <div class="characteristic-title">BMI270 3-Axis Accelerometer</div>
+                <div class="characteristic-data">
+                    <div class="data-title">X - Axis:</div>
+                    <div class="aX data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Y - Axis:</div>
+                    <div class="aY data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Z - Axis:</div>
+                    <div class="aZ data">0</div>
+                </div>
+            </div>
+            <div class="characteristic-container gyroscope-data">
+                <div class="characteristic-title">BMI270 3-Axis Gyroscope</div>
+                <div class="characteristic-data">
+                    <div class="data-title">X - Axis:</div>
+                    <div class="gX data">0</div>
+                </div>
+                <div class="characteristic-data ">
+                    <div class="data-title">Y - Axis:</div>
+                    <div class="gY data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Z - Axis:</div>
+                    <div class="gZ data">0</div>
+                </div>
+            </div>
+            <div class="characteristic-container magnetometer-data">
+                <div class="characteristic-title">BMM150 3-Axis Magnetometer</div>
+                <div class="characteristic-data">
+                    <div class="data-title">X - Axis:</div>
+                    <div class="mX data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Y - Axis:</div>
+                    <div class="mY data">0</div>
+                </div>
+                <div class="characteristic-data">
+                    <div class="data-title">Z - Axis:</div>
+                    <div class="mZ data">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="blt-data-visualizer">
+            <canvas class="IMU-visualizer"></canvas>
+        </div>
+    </div>
 </body> 
 </html>

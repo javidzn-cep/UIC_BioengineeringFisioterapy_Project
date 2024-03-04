@@ -1,0 +1,79 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    font-family: 'Montserrat', 'sans-serif';
+}
+
+body{
+    overflow: hidden;
+}
+
+.IMU-container{
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.blt-data{
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    height: 100%;
+    padding: 80px 30px;
+}
+
+.characteristic-container{
+    margin-top: 50px;
+}
+
+.blt-control-btns{
+    margin: 25px 0px 70px 0px;
+}
+
+.blt-data-visualizer{
+    width: 100%;
+}
+
+.blt-control-btns{
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.blt-btn{
+    background: none;
+    border: none;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.characteristic-data{
+    display: flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.characteristic-title{
+    font-weight: 600;
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.data-title{
+    font-weight: 500;
+}
+
+.final-imu-data .data::after{
+    content: 'º';
+}
+
+.accelerometer-data .data::after{
+    content: ' g';
+}
+
+.gyroscope-data .data::after{
+    content: ' dps';
+}
+
+.magnetometer-data .data::after{
+    content: ' uT';
+}

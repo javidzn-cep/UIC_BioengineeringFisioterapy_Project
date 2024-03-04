@@ -20,17 +20,16 @@ let bluetoothDevice
 
 document.addEventListener('DOMContentLoaded', () => {
     setCustomEvents()
-    document.querySelector('.read').addEventListener('click', () => isWebBluetoothEnabled() && requestAndGetBluetoothInfo());
-    document.querySelector('.start').addEventListener('click', () => isWebBluetoothEnabled() && startNotifications());
-    document.querySelector('.stop').addEventListener('click', () => isWebBluetoothEnabled() && stopNotifications());
+    document.querySelector('.blt-request').addEventListener('click', () => isWebBluetoothEnabled() && requestAndGetBluetoothInfo());
+    document.querySelector('.blt-start-notifications').addEventListener('click', () => isWebBluetoothEnabled() && startNotifications());
+    document.querySelector('.blt-stop-modifications').addEventListener('click', () => isWebBluetoothEnabled() && stopNotifications());
 });
 
 function setCustomEvents(){
     servicesAndCharacteristics.forEach(serviceInfo => {
-        serviceInfo.characteristics.forEach(characteristic => {
-            const eventName = characteristic.event
-            characteristic.event = new CustomEvent(eventName, { detail: { value: null } } ) 
-        });
+        serviceInfo.characteristics.forEach(characteristic => 
+            characteristic.event = new CustomEvent(characteristic.event, { detail: { value: null } } ) 
+        );
     });
 }
 
@@ -77,15 +76,14 @@ function connectToGatt() {
 }
 
 function handleCharacteristicValueChanged(characteristic, e) {
-    const value = JSON.parse(new TextDecoder().decode(e.target.value));
-    characteristic.event.detail.value = value;
+    characteristic.event.detail.value = JSON.parse(new TextDecoder().decode(e.target.value));
     document.dispatchEvent(characteristic.event);
 }
 
 function startNotifications() {
     servicesAndCharacteristics.forEach(service => {
         service.characteristics.forEach(characteristic => {
-            characteristic.gattCharacteristic.startNotifications()
+            characteristic.gattCharacteristic?.startNotifications()
                 .then(_ => {
                     console.log(`Started notifications for characteristic ${characteristic.uuid}`);
                 })
@@ -99,7 +97,7 @@ function startNotifications() {
 function stopNotifications() {
     servicesAndCharacteristics.forEach(service => {
         service.characteristics.forEach(characteristic => {
-            characteristic.gattCharacteristic.stopNotifications()
+            characteristic.gattCharacteristic?.stopNotifications()
                 .then(_ => {
                     console.log(`Stopped notifications for characteristic ${characteristic.uuid}`);
                 })
