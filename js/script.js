@@ -1,5 +1,3 @@
-let accCount = gyroCount = 0
-
 document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('accelerometervaluechanged', e => {
@@ -20,9 +18,5 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('.mZ').textContent = formatNumber(e.detail.value.mZ);
     });
 });
-
-function formatNumber(num){
-    return num.toFixed(13);
-}
 
 const formatNuumber = num => num.toFixed(13);

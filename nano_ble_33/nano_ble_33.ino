@@ -1,26 +1,36 @@
 #include <ArduinoBLE.h>
 #include <Arduino_BMI270_BMM150.h>
 #include <Arduino_JSON.h>
+#include <MadgwickAHRS.h>
+
 
 #define DEVICE_NAME "UIC - Arduino Nano"
-#define RANDOM_DATA_SERVICE_UUID "180F"
-#define RANDOM_DATA_CHAR_UUID "2A19"
-#define RSSI_UUID ""
 #define IMU_SERVICE_UUID "0000AAA0-0000-1000-8000-00805f9b34fb"
 #define ACCELEROMETER_XYZ_UUID "0000AAA1-0000-1000-8000-00805f9b34fb"
 #define GYROSCOPE_XYZ_UUID "0000AAA2-0000-1000-8000-00805f9b34fb"
 #define MAGNETOMETER_XYZ_UUID "0000AAA3-0000-1000-8000-00805f9b34fb"
+#define SENSOR_FUSION_PRY_UUID "0000AAA4-0000-1000-8000-00805f9b34fb"
+#define PI 3.14159265
+#define cfAlpha 0.1
 
-BLEService randomDataService(RANDOM_DATA_SERVICE_UUID);
+
+unsigned long millisOld;
+float aX, aY, aZ, gX, gY, gZ, mX, mY, mZ;
+float thetaG = 0, phiG = 0, dt, phi, theta, psi;
+
+
 BLEService imuService(IMU_SERVICE_UUID);
-BLEStringCharacteristic randomDataChar(RANDOM_DATA_CHAR_UUID, BLERead | BLENotify, 100);
 BLEStringCharacteristic accelerometerXYZ(ACCELEROMETER_XYZ_UUID, BLERead | BLENotify, 100);
 BLEStringCharacteristic gyroscopeXYZ(GYROSCOPE_XYZ_UUID, BLERead | BLENotify, 100);
 BLEStringCharacteristic magnetometerXYZ(MAGNETOMETER_XYZ_UUID, BLERead | BLENotify, 100);
+BLEStringCharacteristic sensorFusionPRY(SENSOR_FUSION_PRY_UUID, BLERead | BLENotify, 100);
+
+Madgwick madgwickFilter;
+
+
 
 void setup() {
     Serial.begin(9600);
-    while (!Serial);
 
     if (!BLE.begin()) {
         Serial.println("Starting Bluetooth® Low Energy failed!");
@@ -35,21 +45,18 @@ void setup() {
     BLE.setLocalName(DEVICE_NAME);
     BLE.setDeviceName(DEVICE_NAME);
 
-    BLE.setAdvertisedService(randomDataService);
     BLE.setAdvertisedService(imuService);
 
-    randomDataService.addCharacteristic(randomDataChar);
     imuService.addCharacteristic(accelerometerXYZ);
     imuService.addCharacteristic(gyroscopeXYZ);
     imuService.addCharacteristic(magnetometerXYZ);
+    imuService.addCharacteristic(sensorFusionPRY);
 
-    BLE.addService(randomDataService);
     BLE.addService(imuService);
-
     BLE.advertise();
 
-    Serial.println("BLE iniciado. Esperando conexión...");
-    Serial.println("Accelerometer sample rate = " + String(IMU.accelerationSampleRate()) + "Hz");
+    madgwickFilter.begin(IMU.accelerationSampleRate());
+    millisOld = millis();
 }
 
 void loop() {
@@ -57,23 +64,20 @@ void loop() {
     if (webApp) {
         Serial.println("Connected to central: " + webApp.address());
         while (webApp.connected()) {
-            readRandomData();
             imuDataHandler();
         }
         Serial.print("Disconnected from central: " + webApp.address());
     }
 }
 
-void readRandomData(){
-    randomDataChar.writeValue(JSON.stringify(random(100)));
-}
-
 void imuDataHandler() {
-    float aX, aY, aZ, gX, gY, gZ, mX, mY, mZ;
-    // if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable() && IMU.magneticFieldAvailable()) {
+    if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable()/* && IMU.magneticFieldAvailable()*/) {
         IMU.readAcceleration(aX, aY, aZ);
         IMU.readGyroscope(gX, gY, gZ);
         IMU.readMagneticField(mX, mY, mZ);
+
+        sensorFusionTrigonometry();
+        // sensorFusionMadgwickAlgorithm();
 
         JSONVar accJSON;
         accJSON["aX"] = aX;
@@ -89,21 +93,52 @@ void imuDataHandler() {
         magJSON["mX"] = mX;
         magJSON["mY"] = mY;
         magJSON["mZ"] = mZ;
+      
+        accelerometerXYZ.writeValue(JSON.stringify(accJSON));
+        gyroscopeXYZ.writeValue(JSON.stringify(gyroJSON));
+        magnetometerXYZ.writeValue(JSON.stringify(magJSON));
+    }
+}
 
-        String accJSONString = JSON.stringify(accJSON);
-        String gyroJSONString = JSON.stringify(gyroJSON);
-        String magJSONString = JSON.stringify(magJSON);
-        
-        Serial.println(accJSONString);
-        Serial.println(gyroJSONString);
-        Serial.println(magJSONString);
+void sensorFusionTrigonometry(){
+  unsigned long millisNew = millis();
+  dt = (millisNew - millisOld) / 1000.;
+  millisOld = millisNew;
 
-        if (accJSONString.length() <= accelerometerXYZ.valueSize() && gyroJSONString.length() <= gyroscopeXYZ.valueSize() && magJSONString.length() <= magnetometerXYZ.valueSize()) {
-            accelerometerXYZ.writeValue(accJSONString);
-            gyroscopeXYZ.writeValue(gyroJSONString);
-            magnetometerXYZ.writeValue(magJSONString);
-        } else {
-            Serial.println("JSON demasiado grande para las características BLE. No se ha enviado.");
-        }
-    // }
+  float thetaM = atan2(aX, aZ) * (180 / PI);
+  float phiM = atan2(aY, aZ) * (180 / PI);
+
+  thetaG = thetaG + gY * dt;
+  phiG = phiG - gX * dt;
+
+  theta = (1 - cfAlpha) * (theta + gY * dt) + (cfAlpha * thetaM);
+  phi = (1 - cfAlpha) * (phi - gX * dt) + (cfAlpha * phiM);
+
+  float thetaRad  = theta * (PI / 180);
+  float phiRad  = phi * (PI / 180);
+  float mX3d = mX * cos(thetaRad) - mY * sin(phiRad) * sin(thetaRad) + mZ * cos(phiRad) * sin(thetaRad);
+  float mY3d = mY * cos(phiRad) + mZ * sin(phiRad);
+  psi = atan2(mY3d, mX3d) * (180 / PI);
+
+  JSONVar sensorJSON;
+  sensorJSON["pitch"] = theta;
+  sensorJSON["roll"] = phi;
+  sensorJSON["yaw"] = psi;
+  
+  sensorFusionPRY.writeValue(JSON.stringify(sensorJSON));
+}
+
+
+void sensorFusionMadgwickAlgorithm(){
+
+  madgwickFilter.updateIMU(gX, gY, gZ, aX, aY, aZ);
+
+  JSONVar sensorJSON;
+  sensorJSON["pitch"] = madgwickFilter.getPitch();
+  sensorJSON["roll"] = madgwickFilter.getRoll();
+  sensorJSON["yaw"] = madgwickFilter.getYaw();
+
+  Serial.println(JSON.stringify(sensorJSON));
+  
+  sensorFusionPRY.writeValue(JSON.stringify(sensorJSON));
 }

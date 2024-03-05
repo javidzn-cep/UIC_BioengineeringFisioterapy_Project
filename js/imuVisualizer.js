@@ -38,11 +38,35 @@ function animate(){
     controls.update()
 }
 
-export function setArduinoPosition(pitch, roll, yaw){
-    arduinoModel.setRotationFromEuler(new THREE.Euler(pitch, yaw, roll), 'XYZ');
-    document.querySelector('.pitch').textContent = radiansToDegrees(pitch);
-    document.querySelector('.roll').textContent = radiansToDegrees(roll);
-    document.querySelector('.yaw').textContent = radiansToDegrees(yaw);
+function setArduinoPosition(pitch, roll, yaw){
+    arduinoModel.rotation.x = degreesToRadians(pitch);
+    arduinoModel.rotation.y = degreesToRadians(0);
+    arduinoModel.rotation.z = degreesToRadians(roll);
+    
+    // alignCameraToYaw(yaw);
+
+    document.querySelector('.pitch').textContent = pitch;
+    document.querySelector('.roll').textContent = roll;
+    document.querySelector('.yaw').textContent = yaw;
 }
 
+function alignCameraToYaw(yaw){
+    const radius = 15; 
+    const height = 5;
+    const alpha = 0.9;
+    
+    const yawRadians = degreesToRadians(yaw);
+
+    const x = camera.position.x * alpha + (1 - alpha) * radius * Math.sin(yawRadians);
+    const z = camera.position.z * alpha + (1 - alpha) * radius * Math.cos(yawRadians);
+
+    camera.position.set(x, height, z);
+}
+
+document.addEventListener('sensorfusionvaluechanged',  e => {
+    const sensor = e.detail.value;
+    setArduinoPosition(sensor.pitch, sensor.roll, sensor.yaw);
+})
+
 const radiansToDegrees = rad => rad * (180 / Math.PI);
+const degreesToRadians = degrees => degrees * (Math.PI / 180);

@@ -1,17 +1,12 @@
 const 
     servicesAndCharacteristics = [
         {
-            service: { uuid: 'battery_service' },
-            characteristics: [
-                { uuid: 'battery_level', event:'randomvaluechanged', gattCharacteristic: null}
-            ]
-        },
-        {
             service: { uuid: '0000aaa0-0000-1000-8000-00805f9b34fb' },
             characteristics: [
                 { uuid: '0000aaa1-0000-1000-8000-00805f9b34fb', event: 'accelerometervaluechanged', gattCharacteristic: null },
                 { uuid: '0000aaa2-0000-1000-8000-00805f9b34fb', event: 'gyroscopevaluechanged', gattCharacteristic: null},
-                { uuid: '0000aaa3-0000-1000-8000-00805f9b34fb', event: 'magnetometervaluechanged', gattCharacteristic: null}
+                { uuid: '0000aaa3-0000-1000-8000-00805f9b34fb', event: 'magnetometervaluechanged', gattCharacteristic: null},
+                { uuid: '0000aaa4-0000-1000-8000-00805f9b34fb', event: 'sensorfusionvaluechanged', gattCharacteristic: null}
             ]
         }
     ],
