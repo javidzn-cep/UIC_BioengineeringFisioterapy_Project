@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIC BCN | BioEngineering - Fisiotherapy Pro</title>
-    <link rel="icon" href="./favicon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap">
@@ -15,7 +15,6 @@
     <script src="./js/script.js"></script>
     <script type="importmap">{"imports": {"three": "https://unpkg.com/three@0.162.0/build/three.module.js","three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"}}</script>
     <script type="module" src="./js/imuVisualizer.js"></script>
-    <script type="module" src="./js/sensorFusion.js"></script>
 </head>
 <body>
     <div class="IMU-container">
@@ -24,6 +23,10 @@
                 <button class="blt-request blt-btn"><i class="fa-brands fa-bluetooth-b fa-2xl" style="color: blue;"></i></button>
                 <button class="blt-start-notifications blt-btn"><i class="fa-solid fa-play fa-2xl"style="color: gray;"></i></button>
                 <button class="blt-stop-modifications blt-btn"><i class="fa-solid fa-stop fa-2xl" style="color: gray;"></i></button>
+            </div>
+            <div class="center-arduino">
+                <i class="fa-solid fa-bullseye fa-xl" style="color: red;"></i>
+                <div>Center Arduino</div>
             </div>
             <div class="characteristic-container final-imu-data">
                 <div class="characteristic-title">Final IMU Data</div>

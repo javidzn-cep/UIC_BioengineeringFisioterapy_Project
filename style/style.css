@@ -77,3 +77,18 @@ body{
 .magnetometer-data .data::after{
     content: ' uT';
 }
+
+.center-arduino{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: 1px solid gray;
+    width: fit-content;
+}
+
+.center-arduino:active{
+    background-color: lightgrey
+}

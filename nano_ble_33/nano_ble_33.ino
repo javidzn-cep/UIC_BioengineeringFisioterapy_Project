@@ -11,12 +11,13 @@
 #define MAGNETOMETER_XYZ_UUID "0000AAA3-0000-1000-8000-00805f9b34fb"
 #define SENSOR_FUSION_PRY_UUID "0000AAA4-0000-1000-8000-00805f9b34fb"
 #define PI 3.14159265
-#define cfAlpha 0.1
+#define LOW_FILTER_ALPHA 0.25
+#define REFRESH_RATE 22
 
 
-unsigned long millisOld;
+unsigned long microsPrevious, microsNow;
 float aX, aY, aZ, gX, gY, gZ, mX, mY, mZ;
-float thetaG = 0, phiG = 0, dt, phi, theta, psi;
+float pitch, roll, yaw;
 
 
 BLEService imuService(IMU_SERVICE_UUID);
@@ -24,9 +25,7 @@ BLEStringCharacteristic accelerometerXYZ(ACCELEROMETER_XYZ_UUID, BLERead | BLENo
 BLEStringCharacteristic gyroscopeXYZ(GYROSCOPE_XYZ_UUID, BLERead | BLENotify, 100);
 BLEStringCharacteristic magnetometerXYZ(MAGNETOMETER_XYZ_UUID, BLERead | BLENotify, 100);
 BLEStringCharacteristic sensorFusionPRY(SENSOR_FUSION_PRY_UUID, BLERead | BLENotify, 100);
-
 Madgwick madgwickFilter;
-
 
 
 void setup() {
@@ -55,8 +54,8 @@ void setup() {
     BLE.addService(imuService);
     BLE.advertise();
 
-    madgwickFilter.begin(IMU.accelerationSampleRate());
-    millisOld = millis();
+    madgwickFilter.begin(REFRESH_RATE);
+    microsPrevious = micros();
 }
 
 void loop() {
@@ -64,7 +63,12 @@ void loop() {
     if (webApp) {
         Serial.println("Connected to central: " + webApp.address());
         while (webApp.connected()) {
-            imuDataHandler();
+            microsNow = micros();
+            if (microsNow - microsPrevious >= 1000000 / REFRESH_RATE) {
+                imuDataHandler();
+                sensorFusionMadgwickAlgorithm();
+                microsPrevious += 1000000 / REFRESH_RATE;
+            }
         }
         Serial.print("Disconnected from central: " + webApp.address());
     }
@@ -76,8 +80,7 @@ void imuDataHandler() {
         IMU.readGyroscope(gX, gY, gZ);
         IMU.readMagneticField(mX, mY, mZ);
 
-        sensorFusionTrigonometry();
-        // sensorFusionMadgwickAlgorithm();
+        calibrateIMU();
 
         JSONVar accJSON;
         accJSON["aX"] = aX;
@@ -100,45 +103,30 @@ void imuDataHandler() {
     }
 }
 
-void sensorFusionTrigonometry(){
-  unsigned long millisNew = millis();
-  dt = (millisNew - millisOld) / 1000.;
-  millisOld = millisNew;
+void sensorFusionMadgwickAlgorithm(){
 
-  float thetaM = atan2(aX, aZ) * (180 / PI);
-  float phiM = atan2(aY, aZ) * (180 / PI);
-
-  thetaG = thetaG + gY * dt;
-  phiG = phiG - gX * dt;
-
-  theta = (1 - cfAlpha) * (theta + gY * dt) + (cfAlpha * thetaM);
-  phi = (1 - cfAlpha) * (phi - gX * dt) + (cfAlpha * phiM);
-
-  float thetaRad  = theta * (PI / 180);
-  float phiRad  = phi * (PI / 180);
-  float mX3d = mX * cos(thetaRad) - mY * sin(phiRad) * sin(thetaRad) + mZ * cos(phiRad) * sin(thetaRad);
-  float mY3d = mY * cos(phiRad) + mZ * sin(phiRad);
-  psi = atan2(mY3d, mX3d) * (180 / PI);
+  madgwickFilter.update(-gX, gY, gZ, -aX, aY, aZ, mX, mY, mX);
+  pitch = LOW_FILTER_ALPHA * pitch + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getPitch();
+  roll = LOW_FILTER_ALPHA * roll + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getRoll();
+  yaw = LOW_FILTER_ALPHA * yaw + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getYaw();
 
   JSONVar sensorJSON;
-  sensorJSON["pitch"] = theta;
-  sensorJSON["roll"] = phi;
-  sensorJSON["yaw"] = psi;
-  
+  sensorJSON["pitch"] = pitch;
+  sensorJSON["roll"] = roll;
+  sensorJSON["yaw"] = yaw;
+
+  Serial.println(JSON.stringify(sensorJSON));
   sensorFusionPRY.writeValue(JSON.stringify(sensorJSON));
 }
 
-
-void sensorFusionMadgwickAlgorithm(){
-
-  madgwickFilter.updateIMU(gX, gY, gZ, aX, aY, aZ);
-
-  JSONVar sensorJSON;
-  sensorJSON["pitch"] = madgwickFilter.getPitch();
-  sensorJSON["roll"] = madgwickFilter.getRoll();
-  sensorJSON["yaw"] = madgwickFilter.getYaw();
-
-  Serial.println(JSON.stringify(sensorJSON));
-  
-  sensorFusionPRY.writeValue(JSON.stringify(sensorJSON));
+void calibrateIMU(){
+  aX += 0;
+  aY += 0;
+  aZ += 0;
+  gX += 0.33;
+  gY += 0;
+  gZ += 0;
+  mX += 32768;
+  mY += 32768;
+  mZ += 32768;
 }

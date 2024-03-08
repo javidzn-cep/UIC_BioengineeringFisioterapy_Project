@@ -19,4 +19,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-const formatNuumber = num => num.toFixed(13);
+const formatNumber = num => num.toFixed(13);
