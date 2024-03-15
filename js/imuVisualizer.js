@@ -28,11 +28,7 @@ pointLight2.position.set(5, 5, -5)
 pointLight2.intensity = 10
 
 const gridHelper = new THREE.GridHelper(200, 50);
-<<<<<<< Updated upstream
 const axesHelper = new THREE.AxesHelper(10);
-=======
-const axesHelper = new THREE.AxesHelper(20);
->>>>>>> Stashed changes
 
 arduinoModel.add(axesHelper);
 scene.add(arduinoModel, pointLight1, pointLight2, gridHelper);
@@ -53,41 +49,12 @@ function setArduinoPosition(){
     document.querySelector('.yaw').textContent = yaw;
 }
 
-<<<<<<< Updated upstream
 function centerArduino(){
     yaw -= yaw > 0 ? angleToSubtract : -angleToSubtract;
     yaw = ((yaw + 180.0) % 360.0 + 360.0) % 360.0;
     yaw = (yaw < 0) ? yaw + 360.0 : yaw;
     yaw -= 180.0;
     yaw = (yaw > 180.0) ? yaw - 360.0 : yaw;
-=======
-function alignModeltoYaw(){
-    const angleToSubtract = 45.0; // El ángulo que deseas restar
-
-    // Restar el ángulo
-    yaw -= angleToSubtract;
-
-    // Asegurarse de que yaw permanezca dentro del rango de ±180 grados
-    yaw = ((yaw + 180.0) % 360.0 + 360.0) % 360.0;
-    yaw = (yaw < 0) ? yaw + 360.0 : yaw;
-    yaw -= 180.0;
-
-    // Si yaw es mayor que 180, se restará 360 para mantenerlo dentro del rango de ±180
-    return (yaw > 180.0) ? yaw - 360.0 : yaw;
-}
-
-function alignCameraToYaw(yaw){
-    const radius = 15;
-    const height = 5;
-    const alpha = 0.9;
-    
-    const yawRadians = degreesToRadians(yaw);
-
-    const x = camera.position.x * alpha + (1 - alpha) * radius * Math.sin(yawRadians);
-    const z = camera.position.z * alpha + (1 - alpha) * radius * Math.cos(yawRadians);
-
-    camera.position.set(x, height, z);
->>>>>>> Stashed changes
 }
 
 document.addEventListener('DOMContentLoaded', () => {
