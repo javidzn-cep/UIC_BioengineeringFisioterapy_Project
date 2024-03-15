@@ -7,10 +7,13 @@
         "passphrase": "UICBCN",
         
     // Rutas en Casa 
-        // "cert": "/Users/javie/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.pem",
-        // "key": "/Users/javie/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.key"
+        "cert": "/Users/javie/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.pem",
+        "key": "/Users/javie/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.key"
     // Rutas en Clase
-        "cert": "/Users/cep.DESKTOP-63K6NML/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.pem",
-        "key": "/Users/cep.DESKTOP-63K6NML/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.key"
+        // "cert": "/Users/cep.DESKTOP-63K6NML/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.pem",
+        // "key": "/Users/cep.DESKTOP-63K6NML/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.key"
+    // Rutas en Portatil Dani
+        // "cert": "/Users/Lenovo/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.pem",
+        // "key": "/Users/Lenovo/Desktop/UIC_BioengineeringFisioterapy_Project/https/localhost.key"
     }
 }

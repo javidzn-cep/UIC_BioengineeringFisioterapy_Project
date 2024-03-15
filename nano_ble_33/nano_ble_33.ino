@@ -106,9 +106,12 @@ void imuDataHandler() {
 void sensorFusionMadgwickAlgorithm(){
 
   madgwickFilter.update(-gX, gY, gZ, -aX, aY, aZ, mX, mY, mX);
-  pitch = LOW_FILTER_ALPHA * pitch + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getPitch();
-  roll = LOW_FILTER_ALPHA * roll + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getRoll();
-  yaw = LOW_FILTER_ALPHA * yaw + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getYaw();
+//   pitch = LOW_FILTER_ALPHA * pitch + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getPitch();
+//   roll = LOW_FILTER_ALPHA * roll + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getRoll();
+//   yaw = LOW_FILTER_ALPHA * yaw + (1 - LOW_FILTER_ALPHA) * madgwickFilter.getYaw();
+  pitch = madgwickFilter.getPitch();
+  roll = madgwickFilter.getRoll();
+  yaw = madgwickFilter.getYaw();
 
   JSONVar sensorJSON;
   sensorJSON["pitch"] = pitch;
