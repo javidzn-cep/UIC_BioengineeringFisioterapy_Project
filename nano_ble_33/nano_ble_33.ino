@@ -2,6 +2,7 @@
 #include <Arduino_BMI270_BMM150.h>
 #include <Arduino_JSON.h>
 #include <MadgwickAHRS.h>
+#include <vector>
 
 
 #define DEVICE_NAME "UIC - Arduino Nano"
@@ -10,6 +11,11 @@
 #define GYROSCOPE_XYZ_UUID "0000AAA2-0000-1000-8000-00805f9b34fb"
 #define MAGNETOMETER_XYZ_UUID "0000AAA3-0000-1000-8000-00805f9b34fb"
 #define SENSOR_FUSION_PRY_UUID "0000AAA4-0000-1000-8000-00805f9b34fb"
+#define ACK_TYPE_CONN_UUID "0000AAB0-0000-1000-8000-00805f9b34fb"
+#define ACK_CONN_LINE_UUID "0000AAB1-0000-1000-8000-00805f9b34fb"
+#define ACK_HANDSHAKE_UUID "0000AAB2-0000-1000-8000-00805f9b34fb"
+#define ACK_RECORDING_UUID "0000AAB3-0000-1000-8000-00805f9b34fb"
+
 #define PI 3.14159265
 #define LOW_FILTER_ALPHA 0.25
 #define REFRESH_RATE 22
@@ -19,14 +25,22 @@ unsigned long microsPrevious, microsNow;
 float aX, aY, aZ, gX, gY, gZ, mX, mY, mZ;
 float pitch, roll, yaw;
 
+int numPruebaACK = 0;
+bool isRecording = false;
+
 // Bluetooth Low Energy Variables
 BLEService imuService(IMU_SERVICE_UUID);
 BLEStringCharacteristic accelerometerXYZ(ACCELEROMETER_XYZ_UUID, BLERead | BLENotify, 1000);
 BLEStringCharacteristic gyroscopeXYZ(GYROSCOPE_XYZ_UUID, BLERead | BLENotify, 1000);
 BLEStringCharacteristic magnetometerXYZ(MAGNETOMETER_XYZ_UUID, BLERead | BLENotify, 1000);
 BLEStringCharacteristic sensorFusionPRY(SENSOR_FUSION_PRY_UUID, BLERead | BLENotify, 1000);
+BLEService ackTypeConn(ACK_TYPE_CONN_UUID);
+BLEStringCharacteristic ackConnLine(ACK_CONN_LINE_UUID, BLERead | BLENotify, 1000);
+BLEStringCharacteristic ackHandshakeLine(ACK_HANDSHAKE_UUID, BLERead | BLEWrite | BLENotify, 1000);
+BLEStringCharacteristic recording(ACK_RECORDING_UUID, BLERead | BLEWrite | BLENotify, 1000);
 
 Madgwick madgwickFilter;
+std::vector<String> ackMemory; 
 
 void setup() {
     Serial.begin(9600);
@@ -38,20 +52,25 @@ void setup() {
 
     if (!IMU.begin()) {
         Serial.println("Starting IMU failed!");
-        // while(1);
+        while(1);
     }
 
     BLE.setLocalName(DEVICE_NAME);
     BLE.setDeviceName(DEVICE_NAME);
 
     BLE.setAdvertisedService(imuService);
+    BLE.setAdvertisedService(ackTypeConn);
 
     imuService.addCharacteristic(accelerometerXYZ);
     imuService.addCharacteristic(gyroscopeXYZ);
     imuService.addCharacteristic(magnetometerXYZ);
     imuService.addCharacteristic(sensorFusionPRY);
+    ackTypeConn.addCharacteristic(ackConnLine);
+    ackTypeConn.addCharacteristic(ackHandshakeLine);
+    ackTypeConn.addCharacteristic(recording);
 
     BLE.addService(imuService);
+    BLE.addService(ackTypeConn);
     BLE.advertise();
 
     madgwickFilter.begin(REFRESH_RATE);
@@ -69,6 +88,7 @@ void loop() {
                 sensorFusionMadgwickAlgorithm();
                 microsPrevious += 1000000 / REFRESH_RATE;
             }
+            ackTypeConection();
         }
         Serial.print("Disconnected from central: " + webApp.address());
     }
@@ -119,8 +139,9 @@ void sensorFusionMadgwickAlgorithm(){
   sensorJSON["roll"] = roll;
   sensorJSON["yaw"] = yaw;
 
-  Serial.println(JSON.stringify(sensorJSON));
+  // Serial.println(JSON.stringify(sensorJSON));
   sensorFusionPRY.writeValue(JSON.stringify(sensorJSON));
+  ackMemory.push_back(JSON.stringify(numPruebaACK++));
 }
 
 void calibrateIMU(){
@@ -130,7 +151,24 @@ void calibrateIMU(){
   gX += 0.33;
   gY += 0;
   gZ += 0;
-  mX += 32768;
-  mY += 32768;
-  mZ += 32768;
+  mX += 0;
+  mY += 0;
+  mZ += 0;
 }
+
+void ackTypeConection(){
+    if (recording.written()) {
+      isRecording = recording.value();
+      Serial.println(isRecording);
+    }
+}
+
+
+
+
+
+
+
+
+
+

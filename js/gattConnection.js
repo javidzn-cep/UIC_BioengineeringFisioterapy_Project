@@ -4,9 +4,17 @@ const
             service: { uuid: '0000aaa0-0000-1000-8000-00805f9b34fb' },
             characteristics: [
                 { uuid: '0000aaa1-0000-1000-8000-00805f9b34fb', event: 'accelerometervaluechanged', gattCharacteristic: null },
-                { uuid: '0000aaa2-0000-1000-8000-00805f9b34fb', event: 'gyroscopevaluechanged', gattCharacteristic: null},
-                { uuid: '0000aaa3-0000-1000-8000-00805f9b34fb', event: 'magnetometervaluechanged', gattCharacteristic: null},
-                { uuid: '0000aaa4-0000-1000-8000-00805f9b34fb', event: 'sensorfusionvaluechanged', gattCharacteristic: null}
+                { uuid: '0000aaa2-0000-1000-8000-00805f9b34fb', event: 'gyroscopevaluechanged', gattCharacteristic: null },
+                { uuid: '0000aaa3-0000-1000-8000-00805f9b34fb', event: 'magnetometervaluechanged', gattCharacteristic: null },
+                { uuid: '0000aaa4-0000-1000-8000-00805f9b34fb', event: 'sensorfusionvaluechanged', gattCharacteristic: null }
+            ]
+        },
+        {
+            service: { uuid: '0000aab0-0000-1000-8000-00805f9b34fb'},
+            characteristics: [
+                { uuid: '0000aab1-0000-1000-8000-00805f9b34fb', event: 'newackvalue', gattCharacteristic: null },
+                { uuid: '0000aab2-0000-1000-8000-00805f9b34fb', event: 'ackconfirmationid', gattCharacteristic: null},
+                { uuid: '0000aab3-0000-1000-8000-00805f9b34fb', event: 'recording', gattCharacteristic: null}
             ]
         }
     ],
@@ -16,14 +24,12 @@ let bluetoothDevice
 document.addEventListener('DOMContentLoaded', () => {
     setCustomEvents()
     document.querySelector('.blt-request').addEventListener('click', () => isWebBluetoothEnabled() && requestAndGetBluetoothInfo());
-    document.querySelector('.blt-start-notifications').addEventListener('click', () => isWebBluetoothEnabled() && startNotifications());
-    document.querySelector('.blt-stop-modifications').addEventListener('click', () => isWebBluetoothEnabled() && stopNotifications());
 });
 
 function setCustomEvents(){
     servicesAndCharacteristics.forEach(serviceInfo => {
         serviceInfo.characteristics.forEach(characteristic => 
-            characteristic.event = new CustomEvent(characteristic.event, { detail: { value: null } } ) 
+            characteristic.event = new CustomEvent(characteristic.event, { detail: { value: null } } )
         );
     });
 }
@@ -71,8 +77,13 @@ function connectToGatt() {
 }
 
 function handleCharacteristicValueChanged(characteristic, e) {
-    characteristic.event.detail.value = JSON.parse(new TextDecoder().decode(e.target.value));
-    document.dispatchEvent(characteristic.event);
+    try {
+        characteristic.uuid == '0000aab3-0000-1000-8000-00805f9b34fb' && console.log(e.target.value)
+        characteristic.event.detail.value = JSON.parse(new TextDecoder().decode(e.target.value));
+        document.dispatchEvent(characteristic.event);
+    } catch (e){
+        console.error(e)
+    }
 }
 
 function startNotifications() {
@@ -84,20 +95,6 @@ function startNotifications() {
                 })
                 .catch(error => {
                     console.warn(`Failed to start notifications for characteristic ${characteristic.uuid}: ${error}`);
-                });
-        });
-    });
-}
-
-function stopNotifications() {
-    servicesAndCharacteristics.forEach(service => {
-        service.characteristics.forEach(characteristic => {
-            characteristic.gattCharacteristic?.stopNotifications()
-                .then(_ => {
-                    console.log(`Stopped notifications for characteristic ${characteristic.uuid}`);
-                })
-                .catch(error => {
-                    console.warn(`Failed to stop notifications for characteristic ${characteristic.uuid}: ${error}`);
                 });
         });
     });

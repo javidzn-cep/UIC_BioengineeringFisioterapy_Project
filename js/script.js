@@ -1,5 +1,14 @@
+let isRecording = false
+
 document.addEventListener('DOMContentLoaded', () => {
 
+    document.querySelector('.blt-start-recording').addEventListener('click', () => {
+        isRecording = !isRecording
+        const dataView = new DataView(new ArrayBuffer(1));
+        dataView.setUint8(0, JSON.stringify(isRecording ? 1 : 0));
+        servicesAndCharacteristics[1].characteristics[2].gattCharacteristic?.writeValue(dataView)
+    });
+    
     document.addEventListener('accelerometervaluechanged', e => {
         document.querySelector('.aX').textContent = formatNumber(e.detail.value.aX);
         document.querySelector('.aY').textContent = formatNumber(e.detail.value.aY);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 
 const canvas = document.querySelector('.IMU-visualizer')
@@ -7,6 +8,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.parentElement.offsetWidth / canvas.parentElement.offsetHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({canvas: canvas})
 const controls = new OrbitControls(camera, renderer.domElement);
+const loader = new OBJLoader();
 let pitch, roll, yaw, yawOrigin, angleToSubtract = 0;
 
 
