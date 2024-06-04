@@ -3,18 +3,18 @@ const
         {
             service: { uuid: '0000aaa0-0000-1000-8000-00805f9b34fb' },
             characteristics: [
-                { uuid: '0000aaa1-0000-1000-8000-00805f9b34fb', event: 'accelerometervaluechanged', gattCharacteristic: null },
-                { uuid: '0000aaa2-0000-1000-8000-00805f9b34fb', event: 'gyroscopevaluechanged', gattCharacteristic: null },
-                { uuid: '0000aaa3-0000-1000-8000-00805f9b34fb', event: 'magnetometervaluechanged', gattCharacteristic: null },
-                { uuid: '0000aaa4-0000-1000-8000-00805f9b34fb', event: 'sensorfusionvaluechanged', gattCharacteristic: null }
+                // { uuid: '0000aaa1-0000-1000-8000-00805f9b34fb', event: 'accelerometervaluechanged', gattCharacteristic: null, notificationsStarted: false },
+                // { uuid: '0000aaa2-0000-1000-8000-00805f9b34fb', event: 'gyroscopevaluechanged', gattCharacteristic: null, notificationsStarted: false },
+                // { uuid: '0000aaa3-0000-1000-8000-00805f9b34fb', event: 'magnetometervaluechanged', gattCharacteristic: null, notificationsStarted: false },
+                { uuid: '0000aaa4-0000-1000-8000-00805f9b34fb', event: 'sensorfusionvaluechanged', gattCharacteristic: null, notificationsStarted: false }
             ]
         },
         {
             service: { uuid: '0000aab0-0000-1000-8000-00805f9b34fb'},
             characteristics: [
-                { uuid: '0000aab1-0000-1000-8000-00805f9b34fb', event: 'newackvalue', gattCharacteristic: null },
-                { uuid: '0000aab2-0000-1000-8000-00805f9b34fb', event: 'ackconfirmationid', gattCharacteristic: null},
-                { uuid: '0000aab3-0000-1000-8000-00805f9b34fb', event: 'recording', gattCharacteristic: null}
+                { uuid: '0000aab1-0000-1000-8000-00805f9b34fb', event: 'newackvalue', gattCharacteristic: null, notificationsStarted: false },
+                { uuid: '0000aab2-0000-1000-8000-00805f9b34fb', event: 'ackconfirmationid', gattCharacteristic: null, notificationsStarted: false},
+                { uuid: '0000aab3-0000-1000-8000-00805f9b34fb', event: 'recording', gattCharacteristic: null, notificationsStarted: false}
             ]
         }
     ],
@@ -24,6 +24,7 @@ let bluetoothDevice
 document.addEventListener('DOMContentLoaded', () => {
     setCustomEvents()
     document.querySelector('.blt-request').addEventListener('click', () => isWebBluetoothEnabled() && requestAndGetBluetoothInfo());
+    document.querySelector('.blt-start-notifications').addEventListener('click', () => isWebBluetoothEnabled() && startNotifications());
 });
 
 function setCustomEvents(){
@@ -34,13 +35,11 @@ function setCustomEvents(){
     });
 }
 
-
 function requestAndGetBluetoothInfo() {
     requestDevice()
         .then(connectToGatt)
         .catch(error => { console.warn(`Failed to start: ${error}`) });
 }
-
 
 function requestDevice() {
     const options = {
@@ -71,31 +70,31 @@ function connectToGatt() {
                             characteristic.addEventListener('characteristicvaluechanged', e => handleCharacteristicValueChanged(serviceInfo.characteristics[index], e));
                         });
                     })
-                    .then(startNotifications)
+                    .then(_ => {
+                        !servicesAndCharacteristics.some(service => service.characteristics.some(characteristics => characteristics.gattCharacteristic === null)) && startNotifications();
+                    })
+                    .catch(error => console.error(error))
             }));
         });
 }
 
 function handleCharacteristicValueChanged(characteristic, e) {
-    try {
-        characteristic.uuid == '0000aab3-0000-1000-8000-00805f9b34fb' && console.log(e.target.value)
-        characteristic.event.detail.value = JSON.parse(new TextDecoder().decode(e.target.value));
-        document.dispatchEvent(characteristic.event);
-    } catch (e){
-        console.error(e)
-    }
+    characteristic.event.detail.value = JSON.parse(new TextDecoder().decode(e.target.value));
+    document.dispatchEvent(characteristic.event);
 }
 
 function startNotifications() {
     servicesAndCharacteristics.forEach(service => {
-        service.characteristics.forEach(characteristic => {
-            characteristic.gattCharacteristic?.startNotifications()
-                .then(_ => {
-                    console.log(`Started notifications for characteristic ${characteristic.uuid}`);
-                })
-                .catch(error => {
-                    console.warn(`Failed to start notifications for characteristic ${characteristic.uuid}: ${error}`);
-                });
+        service.characteristics.filter(characteristic => !characteristic.notificationsStarted && characteristic.gattCharacteristic.properties.notify)
+            .forEach(characteristic => {
+                characteristic.gattCharacteristic?.startNotifications()
+                    .then(_ => {
+                        characteristic.notificationsStarted = true
+                        console.log(`Started notifications for characteristic ${characteristic.uuid}`);
+                    })
+                    .catch(error => {
+                        console.warn(`Failed to start notifications for characteristic ${characteristic.uuid}: ${error}`);
+                    });
         });
     });
 }

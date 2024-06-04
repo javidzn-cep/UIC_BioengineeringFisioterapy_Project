@@ -19,15 +19,16 @@ body{
     flex-direction: column;
     width: 40%;
     height: 100%;
+    gap: 50px;
     padding: 80px 30px;
 }
 
 .characteristic-container{
-    margin-top: 50px;
+    /* margin-top: 50px; */
 }
 
 .blt-control-btns{
-    margin: 25px 0px 70px 0px;
+    margin-block: 20px;
 }
 
 .blt-data-visualizer{

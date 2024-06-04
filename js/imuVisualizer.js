@@ -45,10 +45,6 @@ function setArduinoPosition(){
     arduinoModel.rotation.x = degreesToRadians(pitch);
     arduinoModel.rotation.y = degreesToRadians(yaw);
     arduinoModel.rotation.z = degreesToRadians(roll);
-    
-    document.querySelector('.pitch').textContent = pitch;
-    document.querySelector('.roll').textContent = roll;
-    document.querySelector('.yaw').textContent = yaw;
 }
 
 function centerArduino(){
