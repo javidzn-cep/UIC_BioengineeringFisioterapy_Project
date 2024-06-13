@@ -1,14 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
-
-const canvas = document.querySelector('.IMU-visualizer')
+const canvas = document.querySelector('.IMU-visualizer');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.parentElement.offsetWidth / canvas.parentElement.offsetHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({canvas: canvas})
+const renderer = new THREE.WebGLRenderer({canvas: canvas});
 const controls = new OrbitControls(camera, renderer.domElement);
-const loader = new OBJLoader();
 let pitch, roll, yaw, yawOrigin, angleToSubtract = 0;
 
 
@@ -36,9 +33,9 @@ arduinoModel.add(axesHelper);
 scene.add(arduinoModel, pointLight1, pointLight2, gridHelper);
 
 function animate(){
-    requestAnimationFrame(animate)
     renderer.render(scene, camera)
     controls.update()
+    requestAnimationFrame(animate)
 }
 
 function setArduinoPosition(){
@@ -56,19 +53,28 @@ function centerArduino(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.center-arduino').addEventListener('click', () => {
-        angleToSubtract = yawOrigin;
-    })
+    window.addEventListener('resize', updateCanvasSize);
+    document.addEventListener('sensorfusionvaluechanged', updateVisualization);
+    document.querySelector('.d3-set-center-btn').addEventListener('click', updateSubstractedAngle);
 });
 
-document.addEventListener('sensorfusionvaluechanged',  e => {
+
+function updateVisualization(e) {
     const sensor = e.detail.value;
     pitch = sensor.pitch;
     roll = sensor.roll;
     yaw = yawOrigin = sensor.yaw;
     centerArduino()
     setArduinoPosition();
-})
+}
 
-const radiansToDegrees = rad => rad * (180 / Math.PI);
+function updateCanvasSize() {
+    const width = canvas.parentElement.offsetWidth;
+    const height = canvas.parentElement.offsetHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+}
+
 const degreesToRadians = degrees => degrees * (Math.PI / 180);
+const updateSubstractedAngle = () => angleToSubtract = yawOrigin;

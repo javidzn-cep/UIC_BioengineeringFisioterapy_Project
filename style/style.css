@@ -1,95 +1,365 @@
+:root{
+    --app-spacing: 3vw;
+    --line-color: #C9C9C9;
+    --success-color: #65E700;
+    --waiting-color: #E78A00;
+    --error-color: #FF0000;
+    --app-font-size: clamp(10px, 0.8vw, 200px)
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
-    font-family: 'Montserrat', 'sans-serif';
+    font-family: 'Inter', 'sans-serif';
 }
 
-body{
-    overflow: hidden;
+svg {
+    overflow: visible;
 }
 
-.IMU-container{
+line, path {
+    stroke-width: 1px;
+    stroke-linejoin: round;
+}
+
+/* _____________________   GENERAL   _____________________ */
+
+.indicator-success, .recieved-package-icon{
+    background-color: var(--success-color);
+}
+
+.indicator-waiting, .waiting-package-icon{
+    background-color: var(--waiting-color);
+}
+
+.indicator-error, .lost-package-icon{
+    background-color: var(--error-color);
+}
+
+.indicator-default{
+    background-color: var(--line-color);
+}
+
+.btn{
+    cursor: pointer;
     display: flex;
-    width: 100%;
-    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    white-space: nowrap;
 }
 
-.blt-data{
+.circle{
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+}
+
+.app-frame{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    height: 100vh;
+    width: 100vw;
+    padding: var(--app-spacing);
+    gap: var(--app-spacing);
+}
+
+
+/* _____________________   DATA FRAME   _____________________ */
+
+
+.data-frame{
     display: flex;
     flex-direction: column;
-    width: 40%;
-    height: 100%;
-    gap: 50px;
-    padding: 80px 30px;
-}
-
-.characteristic-container{
-    /* margin-top: 50px; */
-}
-
-.blt-control-btns{
-    margin-block: 20px;
-}
-
-.blt-data-visualizer{
+    justify-content: space-between;
     width: 100%;
+    height: 100%;
 }
 
-.blt-control-btns{
+.data-section-frame{
     display: flex;
-    justify-content: space-evenly;
+    flex-direction: column;
+    font-size: var(--app-font-size);
 }
 
-.blt-btn{
-    background: none;
-    border: none;
-    font-size: 25px;
-    cursor: pointer;
-}
-
-.characteristic-data{
+.data-section-title-frame{
     display: flex;
-    gap: 10px;
-    margin-left: 10px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-bottom: 1px solid var(--line-color);
+    padding: 10px 20px;
 }
 
-.characteristic-title{
+.data-section-title-container{
+    display: flex;
+    align-items: center;
+    gap: 2em;
+}
+
+.blt-icon{
+    fill: blue;
+    height: 3.5em;
+}
+
+.data-section-title-icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 3.5em;
+    aspect-ratio: 1/1;
+}
+
+.data-section-title {
+    font-size: 1.75em;
     font-weight: 600;
-    font-size: 22px;
-    margin-bottom: 10px;
 }
 
-.data-title{
-    font-weight: 500;
-}
-
-.final-imu-data .data::after{
-    content: 'º';
-}
-
-.accelerometer-data .data::after{
-    content: ' g';
-}
-
-.gyroscope-data .data::after{
-    content: ' dps';
-}
-
-.magnetometer-data .data::after{
-    content: ' uT';
-}
-
-.center-arduino{
+.data-section-title-aux{
     display: flex;
     align-items: center;
     gap: 10px;
-    font-weight: 600;
+}
+
+.data-section-content-frame{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     padding: 10px 20px;
-    border-radius: 15px;
-    border: 1px solid gray;
-    width: fit-content;
+}
+
+.blt-status-container{
+    display: flex;
+    align-items: center;
+    gap: 0.55em;
+}
+
+.blt-status-indicator, .recording-package-icon{
+    width: 0.55em;
+}
+
+.blt-status-text, .recording-package-text{
+    font-size: 1em;
+    color: #7E7E7E;
+}
+
+.blt-device-name, .recording-timer{
+    font-size: 1.25em;
+    font-weight: 400;
+    color: black;
+}
+
+.recording-icon{
+    position: relative;
+}
+
+.recording-icon-outer-circle{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #7E7E7E;
+    width: 3em;
+    transform: translate(-50%, -50%);
+}
+
+.recording-icon-inner-circle{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.3em;
+    background-color: red;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: 0.3s;
+}
+
+.recording .recording-icon-inner-circle{
+    width: 1.5em;
+    border-radius: 25%;
+}
+
+.recieved-data-icon{
+    fill: #4d4d4d;
+    width: 40px;
+}
+
+.blt-recording-indicator{
+    width: 0.8em;
+    background-color: #FF0000;
+    opacity: 0;
+}
+
+.recording .blt-recording-indicator{
+    animation: recordingAnimation 1s step-end infinite;
+}
+
+.angle-measurement-frame .data-section-content-frame {
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.angle-data-frame{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 25%;
+}
+
+.angle-data-title{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.25em;
+    font-weight: 500;
+    border-bottom: 1px solid var(--line-color);
+    padding-block: 10px;
+}
+
+.angle-visualizer{
+    width: 80%;
+}
+
+.angle-visualizer-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.angle-visualizer-bg-ui {
+    stroke: var(--line-color);
+    stroke-width: 1px;
+}
+
+.angle-visualizer-angle-path, .angle-visualizer-first-angle, .angle-visualizer-second-angle{
+    fill: rgba(21, 56, 211, 0.3);
+    stroke: rgba(21, 56, 211, 1);
+
+}
+
+.angle-visualizer-current-angle{
+    stroke: red;
+}
+
+.angle-data-content-container{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.angle-data-content-container{
+    font-size: 1em;
+}
+
+.angle-data-content-container span::after{
+    content: 'º';
+}
+
+.angle-data-variance-angle{
+    margin-top: 10px;
+}
+
+
+
+/* _____________________   VISUALIZATION FRAME   _____________________ */
+
+
+.visualization-frame{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    gap: 30px;
+
+}
+
+.visualization-frame .data-section-frame{
+    height: 50%;
+}
+
+.visualization-frame .data-section-title{
+    font-weight: 400;
+    font-size: 1.2em;
+}
+
+.visualization-frame .data-section-content-frame{
+    flex: 1;
+    padding: 0;
+}
+
+.visualization-frame .btn{
+    padding: 5px 20px;
+    border-bottom: 1px solid var(--line-color);
+}
+
+.d3-set-center-btn .btn-icon{
+    fill: red;
 }
 
 .center-arduino:active{
     background-color: lightgrey
+}
+
+.btn-icon{
+    width: 25px;
+}
+
+.btn-description-text{
+    white-space: nowrap;
+}
+
+.recording-chart-container, .IMU-visualizer-container{
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 4vh;
+}
+
+.download-data-btn{
+    opacity: 0.3;
+    pointer-events: none;
+    transition: 0.2s;
+}
+
+.download-data-btn.download-available{
+    opacity: 1;
+    pointer-events: all;
+}
+
+canvas{
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+@keyframes recordingAnimation {
+    0% {opacity: 0}
+    50% {opacity: 1}
+    100% {opacity: 0}
+}
+
+@media only screen and (max-width: 768px){ 
+    .app-frame{
+        flex-direction: column;
+        padding: 7vw;
+        height: 150vh;
+    }
+    .angle-data-frame{
+        width: 30%;
+    }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1000px){ 
+    .app-frame{
+        flex-direction: column;
+        padding: 7vw;
+        height: 150vh;
+
+    }
 }
