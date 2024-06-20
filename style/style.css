@@ -22,6 +22,20 @@ line, path {
     stroke-linejoin: round;
 }
 
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: var(--line-color);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+::-webkit-scrollbar-track{
+    background: rgba(0, 0, 0, 0);
+}
+
 /* _____________________   GENERAL   _____________________ */
 
 .indicator-success, .recieved-package-icon{
@@ -116,6 +130,10 @@ line, path {
     font-weight: 600;
 }
 
+.blt-frame .data-section-title{
+    white-space: nowrap;
+}
+
 .data-section-title-aux{
     display: flex;
     align-items: center;
@@ -148,6 +166,7 @@ line, path {
     font-size: 1.25em;
     font-weight: 400;
     color: black;
+    text-align: end;
 }
 
 .recording-icon{
@@ -306,7 +325,7 @@ line, path {
 }
 
 .btn-icon{
-    width: 25px;
+    height: 1.5em;
 }
 
 .btn-description-text{
@@ -321,13 +340,13 @@ line, path {
     height: 4vh;
 }
 
-.download-data-btn{
+.download-data-btn, .send-modal-toggler{
     opacity: 0.3;
     pointer-events: none;
     transition: 0.2s;
 }
 
-.download-data-btn.download-available{
+.data-available .download-data-btn, .data-available .send-modal-toggler, .send-email-btn.sending-available{
     opacity: 1;
     pointer-events: all;
 }
@@ -338,28 +357,211 @@ canvas{
     left: 0;
 }
 
+
+
+.modal-backdrop{
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgb(0, 0, 0, 0);
+    pointer-events: none;
+    transition: background-color 0.3s;
+}
+
+.modal-shown.modal-backdrop{
+    background-color: rgb(0, 0, 0, 0.3);
+    pointer-events: all;
+}
+
+.modal-frame{
+    width: 50vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: white;
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+    transition: 0.3s;
+    padding: 50px;
+    border-inline: 1px solid var(--line-color);
+    font-size: clamp(15px, 1.1vw, 200px);
+    gap: 50px;
+}
+
+.modal-shown .modal-frame{
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-header{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.modal-title{
+    font-size: 2em;
+    font-weight: 900;
+    text-align: center;
+}
+
+.modal-subtitle{
+    font-family: var(--font-secondary);
+    font-size: 0.8em;
+    width: 85%;
+}
+
+.modal-content-container{
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.email-info-form{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 30px;
+    font-size: 0.8em;
+    width: 60%;
+}
+
+.modal-input-container{
+    display: flex;
+    flex-direction: column;
+}
+    
+.mandatory-input label::after{
+    content: '  *';
+    color: #ff0000;
+    font-size: 0.7em;
+    vertical-align: top;
+}
+
+label{
+    color: #747474;
+}
+
+.optional-input label::after{
+    content: ' (optional)';
+    color: #4d4d4d;
+    font-size: 0.6em;
+    vertical-align: text-top;
+}
+
+input, textarea{
+    border: none;
+    resize: none;
+    outline: none;
+    border-bottom: 1px solid var(--line-color);
+    transition: border-bottom 0.3s;
+    font-size: 1em;
+    padding: 15px 0px 5px 0px;
+}
+
+input::placeholder, textarea::placeholder{
+    font-size: 0.8em;
+}
+
+input:focus, textarea:focus{
+    border-bottom: 1px solid black;
+
+}
+
+.send-email-btn{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    background-color: black;
+    color: white;
+    padding: 10px ;
+    font-size: 1em;
+    cursor: pointer;
+    opacity: 0.3;
+    pointer-events: none;
+    transition: 0.3s;
+}
+
+.sending-indicator-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 10px;
+}
+
+.input-error{
+    border-color: red !important;
+}
+
+.sending-indicator{
+    background-color: white;
+    animation: sendingEmailAnimation 1s infinite; 
+    animation-play-state: paused;
+    display: none;
+}
+
+.sending-success .sending-indicator{
+    animation: none;
+    background-color: var(--success-color);
+    animation-play-state: paused;
+	width: 100%;
+	opacity: 1;
+}
+
+.sending-error .sending-indicator{
+    animation: none;
+    background-color: var(--error-color);
+    animation-play-state: paused;
+	width: 100%;
+	opacity: 1;
+}
+
+.sending-email .sending-indicator{
+    display: block;
+    animation-play-state: running;
+}
+
 @keyframes recordingAnimation {
     0% {opacity: 0}
     50% {opacity: 1}
     100% {opacity: 0}
 }
 
-@media only screen and (max-width: 768px){ 
-    .app-frame{
-        flex-direction: column;
-        padding: 7vw;
-        height: 150vh;
-    }
-    .angle-data-frame{
-        width: 30%;
-    }
+@keyframes sendingEmailAnimation {
+    0% {width: 30%; opacity: 0;}
+    50% {width: 100%; opacity: 1;}
+    100% {width: 30%; opacity: 0;}
 }
 
-@media only screen and (min-width: 768px) and (max-width: 1000px){ 
+@media only screen and (max-width: 1000px){ 
     .app-frame{
         flex-direction: column;
         padding: 7vw;
-        height: 150vh;
+        height: 200vh;
+    }
 
+    .modal-frame{
+        width: 90vw;
+        padding: 20px;
+    }
+
+    .email-info-form {
+        width: 100%;
+    }
+
+    .angle-data-frame{
+        width: 30%;
     }
 }

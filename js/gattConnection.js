@@ -4,7 +4,6 @@ const
             service: { uuid: '0000aaa0-0000-1000-8000-00805f9b34fb', gattService: null},
             characteristics: [
                 { uuid: '0000aaa1-0000-1000-8000-00805f9b34fb', event: 'sensorfusionvaluechanged', gattCharacteristic: null, notificationsStarted: false },
-                { uuid: '0000aaa2-0000-1000-8000-00805f9b34fb', event: 'angle0meditionvalue', gattCharacteristic: null, notificationsStarted: false }
             ]
         },
         {
@@ -35,7 +34,7 @@ const
         {
             to: 'services', identifier: '.blt-services-status', status: [
                 {name: 'default', indicatorClassName: 'indicator-default', message: 'No Services Connected'},
-                {name: 'waiting', indicatorClassName: 'indicator-waiting', message: 'Getting GATT Services...'},
+                {name: 'waiting', indicatorClassName: 'indicator-waiting', message: '', auxFuncition: updateServicesMessage},
                 {name: 'success', indicatorClassName: 'indicator-success', message: 'GATT Services Connected Successfully'},
                 {name: 'error', indicatorClassName: 'indicator-error', message: 'Error tying to get GATT Services'},
             ]
@@ -43,7 +42,7 @@ const
         {
             to: 'characteristics', identifier: '.blt-characteristics-status', status: [
                 {name: 'default', indicatorClassName: 'indicator-default', message: 'No Characteristics Connected'},
-                {name: 'waiting', indicatorClassName: 'indicator-waiting', message: 'Getting GATT Characteristics...'},
+                {name: 'waiting', indicatorClassName: 'indicator-waiting', message: '' , auxFuncition: updateCharacteristicsMessage},
                 {name: 'success', indicatorClassName: 'indicator-success', message: 'GATT Characteristics Connected Successfully'},
                 {name: 'error', indicatorClassName: 'indicator-error', message: 'Error tying to get GATT Characteristics'},
             ]
@@ -51,7 +50,7 @@ const
         {
             to: 'notifications', identifier: '.blt-notification-status', status: [
                 {name: 'default', indicatorClassName: 'indicator-default', message: 'No Notifications for Characteristics Started'},
-                {name: 'waiting', indicatorClassName: 'indicator-waiting', message: 'Starting Notifications for GATT Characteristics...'},
+                {name: 'waiting', indicatorClassName: 'indicator-waiting', message: '', auxFuncition: updateStartingNoficationsMessage},
                 {name: 'success', indicatorClassName: 'indicator-success', message: 'Notifications for GATT Characteristics Started Successfully'},
                 {name: 'error', indicatorClassName: 'indicator-error', message: 'Error tying to start notifications for GATT Characteristics'},
             ]
@@ -96,6 +95,7 @@ function requestDevice() {
 
 function connectToGatt() {
     if (bluetoothDevice.gatt.connected) {
+        updateGattMessages({device: 'success'})
         return Promise.resolve();
     }
 
@@ -104,16 +104,22 @@ function connectToGatt() {
         .then(server => {
             updateGattMessages({server: 'success', services: 'waiting'})
             return Promise.all(GATT_SERVICES_CHARACTERISTICS.map(serviceInfo => {
-                return server.getPrimaryService(serviceInfo.service.uuid)
+                 server.getPrimaryService(serviceInfo.service.uuid).then(primaryService => {
+                    GATT_SERVICES_CHARACTERISTICS.find(serviceInfo => serviceInfo.service.uuid === primaryService.uuid).service.gattService = primaryService;
+                    updateGattMessages({services: 'waiting'})
+                    return primaryService
+                    })
                     .then(primaryService => {
                         updateGattMessages({services: 'success', characteristics: 'waiting'})
-                        GATT_SERVICES_CHARACTERISTICS.find(serviceInfo => serviceInfo.service.uuid === primaryService.uuid).service.gattService = primaryService;
                         return Promise.all(serviceInfo.characteristics.map(characteristicInfo => 
-                            primaryService.getCharacteristic(characteristicInfo.uuid)
+                            primaryService.getCharacteristic(characteristicInfo.uuid).then(characteristic => {
+                                let characteristicInfo =  serviceInfo.characteristics.find(c => c.uuid === characteristic.uuid);
+                                characteristicInfo.gattCharacteristic = characteristic
+                                characteristicInfo.notificationsStarted = false
+                                updateGattMessages({characteristics: 'waiting'})
+                                return characteristic
+                                })
                                 .then(characteristic => {
-                                    let characteristicInfo =  serviceInfo.characteristics.find(c => c.uuid === characteristic.uuid);
-                                    characteristicInfo.gattCharacteristic = characteristic
-                                    characteristicInfo.notificationsStarted = false
                                     characteristic.addEventListener('characteristicvaluechanged', e => handleCharacteristicValueChanged(serviceInfo.characteristics.find(c => c.uuid === characteristicInfo.uuid), e));
                                 })
                                 .catch(error => {
@@ -124,9 +130,8 @@ function connectToGatt() {
                         ));
                     })
                     .then(_ => {
-                            updateGattMessages({characteristics: 'success', notifications: 'waiting'})
-                            !GATT_SERVICES_CHARACTERISTICS.some(service => service.characteristics.some(characteristics => characteristics.gattCharacteristic === null)) && startCharacteristicsNotifications();
-                        })
+                        !GATT_SERVICES_CHARACTERISTICS.some(service => service.characteristics.some(characteristics => characteristics.gattCharacteristic === null)) && startCharacteristicsNotifications();
+                    })
                     .catch(error => {
                         console.error(error);
                         updateGattMessages({services: 'error'})
@@ -150,31 +155,39 @@ function handleCharacteristicValueChanged(characteristic, e) {
     document.dispatchEvent(characteristic.event);
 }
 
-function startCharacteristicsNotifications() {
-    GATT_SERVICES_CHARACTERISTICS.forEach(service => {
-        service.characteristics.filter(characteristic => !characteristic.notificationsStarted)
-            .forEach(characteristic => {
-                characteristic.gattCharacteristic?.startNotifications()
-                    .then(_ => {
-                        characteristic.notificationsStarted = true
-                        const characteristicNotNotifying = GATT_SERVICES_CHARACTERISTICS.flatMap(service => service.characteristics.filter(characteristics => !characteristics.notificationsStarted))
-                        updateGattMessages({device: 'success', notifications: characteristicNotNotifying.length == 0 ? 'success' : 'waiting'})
-                    })
-                    .catch(error => {
-                        updateGattMessages({notifications: 'error'})
-                        console.error(`Failed to start notifications for characteristic ${characteristic.uuid}: ${error}`);
-                    });
-        });
-    });
+async function startCharacteristicsNotifications() {
+    updateGattMessages({characteristics: 'success', notifications: 'waiting'});
+    
+    for (const service of GATT_SERVICES_CHARACTERISTICS) {
+        for (const characteristic of service.characteristics.filter(characteristic => !characteristic.notificationsStarted)) {
+            try {
+                if (characteristic.gattCharacteristic) {
+                    await characteristic.gattCharacteristic.startNotifications();
+                    characteristic.notificationsStarted = true;
+                    
+                    const characteristicNotNotifying = GATT_SERVICES_CHARACTERISTICS
+                        .flatMap(service => service.characteristics)
+                        .filter(characteristics => !characteristics.notificationsStarted);
+                    
+                    const currentStatus = characteristicNotNotifying.length === 0 ? 'success' : 'waiting';
+                    updateGattMessages({device: currentStatus, notifications: currentStatus});
+                }
+            } catch (error) {
+                updateGattMessages({notifications: 'error'});
+                console.error(`Failed to start notifications for characteristic ${characteristic.uuid}: ${error}`);
+            }
+        }
+    }
 }
 
 function handleDisconnection(){
-    const causedByConnError = Array.from(document.querySelectorAll('.blt-status-indicator')).some(indicator => indicator.classList.contains('indicator-error'));
     setTimeout(() => {
-        updateGattMessages({device: 'default', server: 'default', services: 'default', characteristics: 'default', notifications: 'default'})
-    }, causedByConnError ? 5000 : 0)
+        const causedByConnError = Array.from(document.querySelectorAll('.blt-status-indicator')).some(indicator => indicator.classList.contains('indicator-error'));
+        setTimeout(() => {
+            updateGattMessages({device: 'default', server: 'default', services: 'default', characteristics: 'default', notifications: 'default'})
+        }, causedByConnError ? 5000 : 0)
+    }, 500)
 }
-
 
 function updateGattMessages({device = null, server = null, services = null, characteristics = null, notifications = null}){
     const messages = [
@@ -188,9 +201,9 @@ function updateGattMessages({device = null, server = null, services = null, char
         const info = GATT_MESSAGES.find(info => info.to == message.to);
         const infoStatus = info.status.find(info => info.name == message.status);
         const element = document.querySelector(info.identifier);
+        infoStatus.auxFuncition && infoStatus.auxFuncition();
         const indicator = element.querySelector('.blt-status-indicator');
         const text = element.querySelector('.blt-status-text');
-        infoStatus.auxFuncition && infoStatus.auxFuncition();
         changeIndicator(indicator, infoStatus.indicatorClassName);
         text.innerHTML = infoStatus.message;
     })
@@ -198,6 +211,24 @@ function updateGattMessages({device = null, server = null, services = null, char
 
 function updateDeviceName(status){
     GATT_MESSAGES.find(info => info.to == 'device').status.find(statusInfo => statusInfo.name == status).message = bluetoothDevice.name;
+}
+
+function updateServicesMessage(){
+    const totalServices = GATT_SERVICES_CHARACTERISTICS.length;
+    const servicesWithNonNullGattService = GATT_SERVICES_CHARACTERISTICS.filter(service => service.service.gattService !== null).length;
+    GATT_MESSAGES.find(info => info.to == 'services').status.find(statusInfo => statusInfo.name == 'waiting').message = `Getting GATT Services (${servicesWithNonNullGattService}/${totalServices})...`;
+}
+
+function updateCharacteristicsMessage(){
+    const totalCharacteristics = GATT_SERVICES_CHARACTERISTICS.reduce((count, service) => count + service.characteristics.length, 0);
+    const characteristicsWithNonNullGattCharacteristic = GATT_SERVICES_CHARACTERISTICS.reduce((count, service) => count + service.characteristics.filter(characteristic => characteristic.gattCharacteristic !== null).length, 0);
+    GATT_MESSAGES.find(info => info.to == 'characteristics').status.find(statusInfo => statusInfo.name == 'waiting').message = `Getting GATT Characteristics (${characteristicsWithNonNullGattCharacteristic}/${totalCharacteristics})...`;
+}
+
+function updateStartingNoficationsMessage(){
+    const totalCharacteristics = GATT_SERVICES_CHARACTERISTICS.reduce((count, service) => count + service.characteristics.length, 0);
+    const characteristicWithStartedNotifications = GATT_SERVICES_CHARACTERISTICS.reduce((count, service) => count + service.characteristics.filter(characteristic => characteristic.notificationsStarted).length, 0);
+    GATT_MESSAGES.find(info => info.to == 'notifications').status.find(statusInfo => statusInfo.name == 'waiting').message = `Starting Notifications for GATT Characteristics (${characteristicWithStartedNotifications}/${totalCharacteristics})...`;
 }
 
 function changeIndicator(element, newIndicator){

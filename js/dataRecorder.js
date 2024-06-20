@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initVariables();
     updateMessages('default');
     document.querySelector('.blt-start-recording').addEventListener('click', toggleRecording);
-    document.querySelector('.download-data-btn').addEventListener('click', downloadData);
     document.addEventListener('newackvalue', ackComunicationReceiver);
 });
 
@@ -129,33 +128,9 @@ function updateRecordingInfo(){
     document.querySelector('.num-lost-packages').textContent = recordingInfo.lostPackages;
 }
 
-function downloadData(){
-    const timeStamp = new Date();
-    const csvSeparator = ',';
-    const titles = ['TimeStamp', 'Measured Pitch', 'Measured Roll', 'Measured Yaw', 'Pitch', 'Roll', 'Yaw']
-    const csvContent = `data:text/csv;charset=utf-8,${titles.join(csvSeparator)}\n${recordingData.map(data => [data.micros,  data.measuredPitch, data.measuredRoll, data.measuredYaw, data.pitch, data.roll, data.yaw].map(number => number.toFixed(10)).join(csvSeparator)).join('\n')}`;
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.href = encodedUri;
-    link.download = `${[timeStamp.getFullYear(), timeStamp.getMonth() + 1, timeStamp.getDate(), timeStamp.getHours(), timeStamp.getMinutes(), timeStamp.getSeconds()].join('-')}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
 function updateMessages(staus){
     const info = RECORDING_MESSAGES.find(message => message.name === staus)
     document.querySelector('.recording-frame').classList.toggle('recording', info.recordingUI);
     document.querySelector('.recording-status-info').textContent = info.message;
-    document.querySelector('.download-data-btn').classList.toggle('download-available', info.downloadAvailable && recordingData.length != 0)
+    document.querySelector('.data-export-btn-container').classList.toggle('data-available', info.downloadAvailable && recordingData.length != 0)
 }
-
-
-
-
-
-
-
-
-
-

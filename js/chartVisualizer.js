@@ -92,13 +92,7 @@ function updateChart(){
         recordingChart.data.datasets[5].data.push(recordingData[recordingData.length - 1].measuredYaw);
     } else {
         recordingChart.data.labels = []
-        recordingChart.data.datasets[0].data = [];
-        recordingChart.data.datasets[1].data = [];
-        recordingChart.data.datasets[2].data = [];
-        recordingChart.data.datasets[3].data = [];
-        recordingChart.data.datasets[4].data = [];
-        recordingChart.data.datasets[5].data = [];
-
+        recordingChart.data.datasets.forEach(dataset => dataset.data = []);
     }
     recordingChart.update();
 }

@@ -12,22 +12,17 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" >
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="./style/style.css">
+    <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.162.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/" } }</script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.0.1/dist/chart.umd.min.js"></script>
-    <script type="importmap">
-        {
-            "imports": 
-            {
-                "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
-            }
-        }
-    </script>
-    <script type="module" src="./js/imuVisualizer.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="./js/imuVisualizer.js" type="module"></script>
     <script src="./js/dataRecorder.js"></script>
+    <script src="./js/dataExporter.js"></script>
     <script src="./js/chartVisualizer.js"></script>
     <script src="./js/gattConnection.js"></script>
     <script src="./js/angleMeasurer.js"></script>
-    <script src="./js/script.js"></script>
 </head>
 <body>
     <div class="app-frame">
@@ -117,7 +112,7 @@
                 </div>
                 <div class="data-section-content-frame">
                     <div class="angle-data-frame">
-                        <div class="angle-data-title">Pitch</div>
+                        <div class="angle-data-title" translate="no">Pitch</div>
                         <div class="angle-visualizer-container pitch-angle-visualizer">
                             <svg class="angle-visualizer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
                                 <line class="vert-line angle-visualizer-bg-ui" x1="50" y1="0" x2="50" y2="100"></line>
@@ -135,7 +130,7 @@
                         </div>
                     </div>
                     <div class="angle-data-frame">
-                        <div class="angle-data-title">Roll</div>
+                        <div class="angle-data-title" translate="no">Roll</div>
                         <div class="angle-visualizer-container roll-angle-visualizer">
                             <svg class="angle-visualizer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
                                 <line class="vert-line angle-visualizer-bg-ui" x1="50" y1="0" x2="50" y2="100"></line>
@@ -153,7 +148,7 @@
                         </div>
                     </div>
                     <div class="angle-data-frame">
-                        <div class="angle-data-title">Yaw</div>
+                        <div class="angle-data-title" translate="no">Yaw</div>
                         <div class="angle-visualizer-container yaw-angle-visualizer">
                             <svg class="angle-visualizer yaw-angle-visualizer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
                                 <line class="vert-line angle-visualizer-bg-ui" x1="50" y1="0" x2="50" y2="100"></line>
@@ -173,7 +168,6 @@
                 </div>
             </div>
         </div>
-
         <div class="visualization-frame">
             <div class="data-section-frame IMU-visualizer-frame">
                 <div class="data-section-title-frame">
@@ -200,7 +194,13 @@
                     <div class="data-section-title-container">
                         <div class="data-section-title">Recorded Data Chart Visualization</div>
                     </div>
-                    <div class="data-section-title-aux">
+                    <div class="data-section-title-aux data-export-btn-container">
+                        <a class="send-modal-toggler btn">
+                            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M24 0l-6 22-8.129-7.239 7.802-8.234-10.458 7.227-7.215-1.754 24-12zm-15 16.668v7.332l3.258-4.431-3.258-2.901z"/>
+                            </svg>
+                            <!-- <div class="btn-description-text">Send Data</div> -->
+                        </a>
                         <a class="download-data-btn btn">
                             <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 512 342.06">
                                 <path d="M271.14 2.64c50.45 8.83 86.48 38.5 110.54 83.1l4.51-.45c18.95-1.39 38.61 1.62 56.18 8.84 34.63 14.2 55.57 42.42 64.44 77.79 6.76 26.89 7.34 56.62-.79 83.27-12.47 41.01-42.09 
@@ -208,12 +208,39 @@
                                     6.68-20.46 16.3-34.33 29.63-44.85 15.76-12.45 37.62-20.69 57.19-26.21C115.68 34.94 187.54-11.94 271.14 2.64zm55.11 186.93c5.19.22 8.87 1.94 11 5.17 5.77 8.66-2.11 17.21-7.58 23.23l-67.7 59.77c-5.8 
                                     6.41-14.06 6.41-19.86 0l-61.25-61.4c-5.11-5.77-11.43-13.62-6.12-21.6 2.19-3.23 5.83-4.95 11.01-5.17h34.9v-55.43c0-7.86 6.47-14.37 14.36-14.37h41.98c7.89 0 14.35 6.7 14.35 14.37v55.43h34.91z"/>
                             </svg>
-                            <div class="btn-description-text">Download Data</div>
+                            <!-- <div class="btn-description-text">Download Data</div> -->
                         </a>
                     </div>
                 </div>
                 <div class="data-section-content-frame recording-chart-container">
                     <canvas class="recording-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="modals-container">
+            <div class="modal-backdrop">
+                <div class="modal-frame">
+                    <div class="modal-header">
+                        <div class="modal-title">DATA SENDING FORM</div>
+                        <div class="modal-subtitle">In other to send your data to the Phisiotherapist, we need to know who's the data comming from, please, fill this form before sending it!</div>
+                    </div>
+                    <div class="modal-content-container">
+                        <form class="email-info-form">
+                            <div class="modal-input-container mandatory-input">
+                                <label for="email-full-name">Full Name</label>
+                                <input class id="email-full-name" type="text" placeholder="Enter your full name...">
+                            </div>
+                            <div class="modal-input-container mandatory-input">
+                                <label class="mandatory-input" for="email-dni">DNI or NIE</label>
+                                <input class="mandatory-input"id="email-dni" class="num-homeless-input" type="text" placeholder="Enter your DNI or NIE...  ex: 12345678Z" >
+                            </div>
+                            <div class="modal-input-container optional-input">
+                                <label for="email-comments" class="accesibility-not-visible">Comments to the Phisiotherapist</label>
+                                <textarea id="email-comments" type="text" rows="5" spellcheck="true" placeholder="If you want to say something to your phisiotherapist, this is your moment..."></textarea>
+                            </div>
+                            <button class="send-email-btn" type="submit" ><span class="sending-indicator-container"><span class="sending-indicator circle"></span></span><span class="send-email-btn-text">Send Data</span></button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
